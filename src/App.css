@@ -1,0 +1,21 @@
+.app {
+    min-height: 100vh;
+    background: var(--bg-primary);
+}
+
+.single-view {
+    min-height: 100vh;
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-lg);
+}
+
+.back-button {
+    position: fixed;
+    top: var(--space-lg);
+    left: var(--space-lg);
+    z-index: 100;
+}

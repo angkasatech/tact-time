@@ -1,0 +1,107 @@
+.timer-container {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.timer-header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-xl);
+}
+
+.recording-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-lg);
+    background: rgba(245, 87, 108, 0.2);
+    border: 1px solid #f5576c;
+    border-radius: var(--radius-lg);
+    color: #f5576c;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f5576c;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.timer-display {
+    margin-bottom: var(--space-xl);
+    padding: var(--space-xl);
+    background: var(--primary-gradient);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-glow);
+}
+
+.timer-value {
+    font-size: 4rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    color: white;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    letter-spacing: 2px;
+}
+
+.timer-label {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: var(--space-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.timer-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+    padding: var(--space-lg);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) 0;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.vin-text {
+    font-family: var(--font-mono);
+    font-size: 1.125rem;
+}
+
+.btn-finish {
+    width: 100%;
+    padding: var(--space-md) var(--space-lg);
+    font-size: 1.125rem;
+}
+
+@media (max-width: 640px) {
+    .timer-value {
+        font-size: 3rem;
+    }
+}

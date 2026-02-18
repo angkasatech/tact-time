@@ -1,0 +1,82 @@
+.vin-list-container {
+    height: 100%;
+    max-height: 800px;
+    display: flex;
+    flex-direction: column;
+}
+
+.vin-list-container h3 {
+    margin-bottom: var(--space-md);
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.loading-state,
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xl);
+    color: var(--text-muted);
+    gap: var(--space-sm);
+}
+
+.records-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    overflow-y: auto;
+    padding-right: var(--space-xs);
+    flex: 1;
+}
+
+.record-card {
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.record-card:hover {
+    transform: translateX(4px);
+    border-color: var(--accent-purple);
+    background: var(--bg-secondary);
+}
+
+.record-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+}
+
+.vin-number {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.duration-badge {
+    padding: 0.25rem 0.75rem;
+    background: var(--success-gradient);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: white;
+    box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+}
+
+.record-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.record-time {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}

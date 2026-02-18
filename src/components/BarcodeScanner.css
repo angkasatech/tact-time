@@ -1,0 +1,91 @@
+.scanner-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.scanner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.scanner-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.camera-mode {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.scan-instructions {
+    text-align: center;
+    padding: var(--space-md);
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--accent-purple);
+}
+
+.scan-instructions p {
+    margin: 0.5rem 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.scan-instructions p:first-child {
+    font-weight: 600;
+    color: var(--accent-purple);
+}
+
+.qr-reader {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scanner-controls {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: center;
+}
+
+.manual-mode form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.manual-mode label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.error-message {
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(245, 87, 108, 0.2);
+    border: 1px solid #f5576c;
+    border-radius: var(--radius-md);
+    color: #f5576c;
+    text-align: center;
+}
+
+/* Override html5-qrcode styles */
+#qr-reader video {
+    border-radius: var(--radius-md);
+}
+
+#qr-reader__dashboard_section_csr button {
+    background: var(--primary-gradient) !important;
+    border: none !important;
+    border-radius: var(--radius-sm) !important;
+    padding: var(--space-xs) var(--space-md) !important;
+    font-weight: 600 !important;
+}
