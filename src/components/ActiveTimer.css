@@ -96,12 +96,64 @@
 
 .btn-finish {
     width: 100%;
+    \n padding: var(--space-md) var(--space-lg);
+    font-size: 1.125rem;
+}
+
+/* Pause feature styles */
+.recording-indicator.paused {
+    background: rgba(255, 193, 7, 0.2);
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+.pause-icon {
+    width: 8px;
+    height: 8px;
+    background: #ffc107;
+    border-radius: 2px;
+}
+
+.pause-time-info {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    background: rgba(255, 193, 7, 0.15);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.timer-actions {
+    display: flex;
+    gap: var(--space-md);
+    width: 100%;
+}
+
+.btn-pause,
+.btn-resume {
+    flex: 1;
     padding: var(--space-md) var(--space-lg);
     font-size: 1.125rem;
+}
+
+.btn-finish {
+    flex: 2;
 }
 
 @media (max-width: 640px) {
     .timer-value {
         font-size: 3rem;
+    }
+
+    .timer-actions {
+        flex-direction: column;
+    }
+
+    .btn-pause,
+    .btn-resume,
+    .btn-finish {
+        flex: none;
+        width: 100%;
     }
 }

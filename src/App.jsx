@@ -49,14 +49,15 @@ function App() {
         setView('dashboard');
     };
 
-    const handleFinish = async () => {
+    const handleFinish = async (totalPausedTime = 0) => {
         if (!activeRecording) return;
 
         const record = {
             vin: activeRecording.vin,
             category: activeRecording.category,
             startTime: activeRecording.startTime,
-            endTime: new Date().toISOString()
+            endTime: new Date().toISOString(),
+            totalPausedTime // Store pause time in milliseconds
         };
 
         // Save to database
