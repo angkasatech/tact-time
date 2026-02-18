@@ -12,7 +12,7 @@ npm install
 npm run build
 
 # Restart PM2
-pm2 restart tact-time
+pm2 restart ecosystem.config.cjs
 
 echo "✅ Deployment complete!"
 echo ""
