@@ -18,15 +18,18 @@ const formatDate = (date) => {
 };
 
 /**
- * Calculate duration in seconds and minutes
+ * Calculate duration in seconds and minutes, excluding paused time
  * @param {string} startTime - ISO date string
  * @param {string} endTime - ISO date string
+ * @param {number} totalPausedTime - Total paused time in milliseconds
  * @returns {Object} - { durationSeconds, durationMinutes }
  */
-const calculateDuration = (startTime, endTime) => {
+const calculateDuration = (startTime, endTime, totalPausedTime = 0) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
-    const durationSeconds = Math.floor((end - start) / 1000);
+    const rawMs = end - start;
+    const workMs = Math.max(0, rawMs - totalPausedTime); // subtract pause time
+    const durationSeconds = Math.floor(workMs / 1000);
     const durationMinutes = Math.round(durationSeconds / 60 * 100) / 100; // 2 decimal places
 
     return { durationSeconds, durationMinutes };
@@ -47,10 +50,11 @@ export const saveRecord = async (record) => {
             // Get current records
             const records = await getAllRecords();
 
-            // Calculate duration
+            // Calculate duration (excluding paused time)
             const { durationSeconds, durationMinutes } = calculateDuration(
                 record.startTime,
-                record.endTime
+                record.endTime,
+                record.totalPausedTime || 0
             );
 
             // Create new record with all fields
