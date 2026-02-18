@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Dashboard from './components/Dashboard';
 import BarcodeScanner from './components/BarcodeScanner';
 import CategorySelector from './components/CategorySelector';
+import Login from './components/Login';
 import {
     getActiveRecording,
     saveActiveRecording,
@@ -14,8 +15,15 @@ function App() {
     const [view, setView] = useState('dashboard'); // 'dashboard', 'scanner', 'category'
     const [scannedVin, setScannedVin] = useState('');
     const [activeRecording, setActiveRecording] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
+        // Check for existing session
+        const session = localStorage.getItem('tacttime_session');
+        if (session) {
+            setIsLoggedIn(true);
+        }
+
         // Initialize database on mount
         initializeDatabase();
 
@@ -26,6 +34,10 @@ function App() {
             setView('dashboard');
         }
     }, []);
+
+    const handleLogin = (username) => {
+        setIsLoggedIn(true);
+    };
 
     const handleStartNew = () => {
         setView('scanner');
@@ -77,6 +89,11 @@ function App() {
     const handleBack = () => {
         setView('dashboard');
     };
+
+    // Show login screen if not authenticated
+    if (!isLoggedIn) {
+        return <Login onLogin={handleLogin} />;
+    }
 
     return (
         <div className="app">
