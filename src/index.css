@@ -370,3 +370,23 @@ h3 {
 .w-full {
   width: 100%;
 }
+
+/* ─── Tablet Landscape Optimization ────────────────────────────────────────────
+   Samsung Galaxy Tab A8: 10.5", WUXGA (1920×1200), landscape = ~1200px height
+   Target: everything visible without scrolling in landscape mode
+   ──────────────────────────────────────────────────────────────────────────── */
+@media (max-height: 900px) and (orientation: landscape),
+(min-width: 1024px) and (max-height: 900px) {
+
+  :root {
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 0.75rem;
+    --space-lg: 1rem;
+    --space-xl: 1.25rem;
+  }
+
+  .glass-card {
+    padding: var(--space-md);
+  }
+}

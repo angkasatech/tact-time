@@ -111,3 +111,33 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Tablet landscape — compact category cards */
+@media (max-height: 900px) and (orientation: landscape),
+(min-width: 1024px) and (max-height: 900px) {
+
+    .category-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .category-card {
+        padding: var(--space-md) var(--space-sm);
+    }
+
+    .category-icon {
+        font-size: 2rem;
+        margin-bottom: var(--space-xs);
+    }
+
+    .category-label {
+        font-size: 0.875rem;
+    }
+
+    .category-header {
+        margin-bottom: var(--space-md);
+    }
+
+    .category-header h2 {
+        font-size: 1.25rem;
+    }
+}

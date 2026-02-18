@@ -153,3 +153,39 @@
         width: 100%;
     }
 }
+
+/* Tablet landscape — compact timer to fit screen without scrolling */
+@media (max-height: 900px) and (orientation: landscape),
+(min-width: 1024px) and (max-height: 900px) {
+
+    .timer-value {
+        font-size: 2.5rem;
+        letter-spacing: 1px;
+    }
+
+    .timer-display {
+        padding: var(--space-md);
+        margin-bottom: var(--space-md);
+    }
+
+    .timer-info {
+        padding: var(--space-sm) var(--space-md);
+        gap: var(--space-xs);
+        margin-bottom: var(--space-md);
+    }
+
+    .timer-header {
+        margin-bottom: var(--space-md);
+    }
+
+    .info-item {
+        padding: 0.125rem 0;
+    }
+
+    .btn-pause,
+    .btn-resume,
+    .btn-finish {
+        padding: var(--space-sm) var(--space-md);
+        font-size: 1rem;
+    }
+}
