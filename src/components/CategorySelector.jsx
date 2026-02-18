@@ -5,7 +5,8 @@ const CATEGORIES = [
     { id: 'mechanic', label: 'Mechanic', icon: '🔧', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
     { id: 'paint', label: 'Paint', icon: '🎨', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
     { id: 'running', label: 'Running', icon: '🏍️', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
-    { id: 'from-final', label: 'From Final', icon: '💬', gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }
+    { id: 'from-final', label: 'From Final', icon: '💬', gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
+    { id: 'dyno', label: 'Dyno', icon: '⚡', gradient: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)' }
 ];
 
 const CategorySelector = ({ vin, onCategorySelect }) => {
