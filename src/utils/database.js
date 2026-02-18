@@ -1,6 +1,13 @@
 /**
+ * database.js
+ * All records are stored server-side in data/records.json via REST API.
+ * This ensures all tablets/devices share the same data.
+ */
+
+const API_BASE = '/api';
+
+/**
  * Generate unique ID using timestamp + random string
- * @returns {string}
  */
 export const generateId = () => {
     const timestamp = Date.now();
@@ -9,86 +16,58 @@ export const generateId = () => {
 };
 
 /**
- * Format date to ISO string
- * @param {Date} date
- * @returns {string}
- */
-const formatDate = (date) => {
-    return date.toISOString();
-};
-
-/**
  * Calculate duration in seconds and minutes, excluding paused time
- * @param {string} startTime - ISO date string
- * @param {string} endTime - ISO date string
- * @param {number} totalPausedTime - Total paused time in milliseconds
- * @returns {Object} - { durationSeconds, durationMinutes }
  */
 const calculateDuration = (startTime, endTime, totalPausedTime = 0) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
     const rawMs = end - start;
-    const workMs = Math.max(0, rawMs - totalPausedTime); // subtract pause time
+    const workMs = Math.max(0, rawMs - totalPausedTime);
     const durationSeconds = Math.floor(workMs / 1000);
-    const durationMinutes = Math.round(durationSeconds / 60 * 100) / 100; // 2 decimal places
-
+    const durationMinutes = Math.round(durationSeconds / 60 * 100) / 100;
     return { durationSeconds, durationMinutes };
 };
 
 /**
- * Save a completed record to the JSON database
- * This handles race conditions by using a retry mechanism
- * @param {Object} record - { vin, category, startTime, endTime }
+ * Save a completed record to the server (data/records.json)
+ * @param {Object} record - { vin, category, startTime, endTime, totalPausedTime }
  * @returns {Promise<boolean>}
  */
 export const saveRecord = async (record) => {
     const maxRetries = 3;
-    const retryDelay = 100; // ms
+
+    const { durationSeconds, durationMinutes } = calculateDuration(
+        record.startTime,
+        record.endTime,
+        record.totalPausedTime || 0
+    );
+
+    const newRecord = {
+        id: generateId(),
+        dateCreated: new Date().toISOString(),
+        vin: record.vin,
+        category: record.category,
+        startTime: record.startTime,
+        endTime: record.endTime,
+        totalPausedTime: record.totalPausedTime || 0,
+        durationSeconds,
+        durationMinutes
+    };
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-            // Get current records
-            const records = await getAllRecords();
+            const res = await fetch(`${API_BASE}/records`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newRecord)
+            });
 
-            // Calculate duration (excluding paused time)
-            const { durationSeconds, durationMinutes } = calculateDuration(
-                record.startTime,
-                record.endTime,
-                record.totalPausedTime || 0
-            );
-
-            // Create new record with all fields
-            const newRecord = {
-                id: generateId(),
-                dateCreated: formatDate(new Date()),
-                vin: record.vin,
-                category: record.category,
-                startTime: record.startTime,
-                endTime: record.endTime,
-                durationSeconds,
-                durationMinutes
-            };
-
-            // Add to records array
-            records.push(newRecord);
-
-            // Save back to file (in a real app, this would be an API call)
-            // For now, we'll use localStorage as a fallback since we can't write to public files from browser
-            const allRecordsKey = 'tacttime_all_records';
-            localStorage.setItem(allRecordsKey, JSON.stringify(records));
-
-            // Trigger a custom event so other windows/tabs can update
-            window.dispatchEvent(new CustomEvent('tacttime-record-saved', {
-                detail: newRecord
-            }));
-
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
             return true;
         } catch (error) {
             console.error(`Save attempt ${attempt + 1} failed:`, error);
-
             if (attempt < maxRetries - 1) {
-                // Wait before retrying
-                await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
+                await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
             }
         }
     }
@@ -97,62 +76,43 @@ export const saveRecord = async (record) => {
 };
 
 /**
- * Get all records from the database
+ * Get all records from the server
  * @returns {Promise<Array>}
  */
 export const getAllRecords = async () => {
     try {
-        // In a real app, this would fetch from the JSON file or API
-        // For browser-based app, we use localStorage
-        const allRecordsKey = 'tacttime_all_records';
-        const data = localStorage.getItem(allRecordsKey);
-
-        if (data) {
-            return JSON.parse(data);
-        }
-
-        return [];
+        const res = await fetch(`${API_BASE}/records`);
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        return await res.json();
     } catch (error) {
-        console.error('Error getting records:', error);
+        console.error('Error fetching records:', error);
         return [];
     }
 };
 
 /**
- * Initialize the database (create empty structure if needed)
+ * Initialize the database (no-op for server-side storage, kept for compatibility)
  */
 export const initializeDatabase = async () => {
-    const allRecordsKey = 'tacttime_all_records';
-
-    if (!localStorage.getItem(allRecordsKey)) {
-        localStorage.setItem(allRecordsKey, JSON.stringify([]));
-    }
+    // Server handles initialization automatically
 };
 
 /**
- * Listen for record updates from other tabs/windows
- * @param {Function} callback - Called when a new record is saved
- * @returns {Function} - Cleanup function
+ * Poll for new records every intervalMs milliseconds.
+ * Returns a cleanup function to stop polling.
+ * @param {Function} callback - Called with latest records array
+ * @param {number} intervalMs - Polling interval (default 60s)
+ * @returns {Function} cleanup
  */
-export const onRecordSaved = (callback) => {
-    const handler = (event) => {
-        callback(event.detail);
-    };
+export const onRecordSaved = (callback, intervalMs = 60000) => {
+    // Immediate first fetch
+    getAllRecords().then(records => callback(records));
 
-    window.addEventListener('tacttime-record-saved', handler);
+    // Then poll on interval
+    const timer = setInterval(async () => {
+        const records = await getAllRecords();
+        callback(records);
+    }, intervalMs);
 
-    // Also listen for storage events (cross-tab communication)
-    const storageHandler = (event) => {
-        if (event.key === 'tacttime_all_records') {
-            callback(null); // Signal to refresh all records
-        }
-    };
-
-    window.addEventListener('storage', storageHandler);
-
-    // Return cleanup function
-    return () => {
-        window.removeEventListener('tacttime-record-saved', handler);
-        window.removeEventListener('storage', storageHandler);
-    };
+    return () => clearInterval(timer);
 };

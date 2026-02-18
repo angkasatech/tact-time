@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAllRecords, onRecordSaved } from '../utils/database';
+import { onRecordSaved } from '../utils/database';
 import { formatDurationMinutes } from '../utils/timer';
 import './VINList.css';
 
@@ -9,7 +9,6 @@ const VINList = () => {
 
     const loadRecords = async () => {
         const allRecords = await getAllRecords();
-        // Sort by dateCreated descending (latest first)
         const sorted = allRecords.sort((a, b) =>
             new Date(b.dateCreated) - new Date(a.dateCreated)
         );
@@ -18,12 +17,14 @@ const VINList = () => {
     };
 
     useEffect(() => {
-        loadRecords();
-
-        // Listen for new records from other tabs/users
-        const cleanup = onRecordSaved(() => {
-            loadRecords();
-        });
+        // onRecordSaved now polls server every 60s and passes records array directly
+        const cleanup = onRecordSaved((latestRecords) => {
+            const sorted = [...latestRecords].sort((a, b) =>
+                new Date(b.dateCreated) - new Date(a.dateCreated)
+            );
+            setRecords(sorted);
+            setLoading(false);
+        }, 60000);
 
         return cleanup;
     }, []);
