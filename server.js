@@ -10,7 +10,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+// In production (PM2), PORT=8080 is set via ecosystem.config.cjs
+// In dev, use 3001 to avoid conflict with Vite preview (8080)
+const PORT = process.env.PORT || 3001;
 
 // Data file path - lives at project root/data/, survives builds
 const DATA_DIR = path.join(__dirname, 'data');
