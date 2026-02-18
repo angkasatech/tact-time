@@ -94,12 +94,6 @@
     font-size: 1.125rem;
 }
 
-.btn-finish {
-    width: 100%;
-    \n padding: var(--space-md) var(--space-lg);
-    font-size: 1.125rem;
-}
-
 /* Pause feature styles */
 .recording-indicator.paused {
     background: rgba(255, 193, 7, 0.2);
@@ -139,6 +133,8 @@
 
 .btn-finish {
     flex: 2;
+    padding: var(--space-md) var(--space-lg);
+    font-size: 1.125rem;
 }
 
 @media (max-width: 640px) {
