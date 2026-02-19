@@ -1,6 +1,6 @@
 .dashboard-layout {
     display: grid;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 1fr 420px;
     gap: var(--space-md);
     height: 100vh;
     /* fill screen exactly — no scroll */
@@ -155,7 +155,7 @@
 /* Tablet landscape — keep 2-column layout but tighten further */
 @media (max-height: 900px) and (orientation: landscape) {
     .dashboard-layout {
-        grid-template-columns: 1fr 320px;
+        grid-template-columns: 1fr 380px;
         gap: var(--space-sm);
         padding: var(--space-sm);
     }
