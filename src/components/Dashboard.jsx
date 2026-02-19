@@ -5,7 +5,7 @@ import { exportToExcel } from '../utils/excelExport';
 import { getAllRecords } from '../utils/database';
 import './Dashboard.css';
 
-const Dashboard = ({ activeRecording, onStartNew, onFinish }) => {
+const Dashboard = ({ activeRecording, onStartNew, onFinish, onOpenAnalytics }) => {
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
@@ -36,17 +36,23 @@ const Dashboard = ({ activeRecording, onStartNew, onFinish }) => {
         <div className="dashboard-layout">
             <div className="dashboard-main">
                 <div className="dashboard-header">
-                    <div>
+                    <div className="logo-container">
+                        <img src="/logo.png" alt="Company Logo" className="company-logo" />
+                    </div>
+                    <div className="header-title">
                         <h1>Tact Time Tracker</h1>
                         <p className="dashboard-subtitle">Record repair station tact times</p>
                     </div>
                     <div className="header-right">
+                        <button
+                            className="btn btn-secondary analytics-nav-btn"
+                            onClick={onOpenAnalytics}
+                        >
+                            📊 Analytics
+                        </button>
                         <div className="datetime-display">
                             <div className="date-text">{currentTime.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</div>
                             <div className="time-text">{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</div>
-                        </div>
-                        <div className="logo-container">
-                            <img src="/logo.png" alt="Company Logo" className="company-logo" />
                         </div>
                     </div>
                 </div>

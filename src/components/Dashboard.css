@@ -20,35 +20,78 @@
 
 .dashboard-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--space-sm) 0;
+    align-items: stretch;
+    /* all children same height */
     gap: var(--space-md);
     flex-shrink: 0;
 }
 
-.dashboard-header>div:first-child {
-    text-align: left;
+/* Logo — leftmost, fixed width, fills height */
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(10px);
+    min-width: 120px;
+    flex-shrink: 0;
 }
 
-.dashboard-header h1 {
+.company-logo {
+    width: 100%;
+    height: 100%;
+    max-width: 120px;
+    max-height: 60px;
+    object-fit: contain;
+    display: block;
+}
+
+/* Title — grows to fill middle */
+.header-title {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.header-title h1 {
     font-size: 2rem;
     margin-bottom: 0.25rem;
     color: #21C997;
     -webkit-text-fill-color: #21C997;
 }
 
-.dashboard-subtitle {
+.header-title .dashboard-subtitle {
     font-size: 0.875rem;
     color: var(--text-secondary);
 }
 
+/* Right side — datetime only */
 .header-right {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     gap: var(--space-sm);
     flex-shrink: 0;
 }
+
+.analytics-nav-btn {
+    border: 1px solid #21C997 !important;
+    color: #21C997 !important;
+    font-size: 0.875rem;
+    padding: var(--space-sm) var(--space-md);
+    align-self: stretch;
+}
+
+.analytics-nav-btn:hover {
+    background: rgba(33, 201, 151, 0.12) !important;
+}
+
+
+
 
 .datetime-display {
     text-align: right;
@@ -78,28 +121,7 @@
     letter-spacing: 1px;
 }
 
-.logo-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* match datetime-display sizing exactly */
-    padding: var(--space-sm) var(--space-md);
-    background: var(--bg-glass);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
-    backdrop-filter: blur(10px);
-    align-self: stretch;
-    min-width: 120px;
-}
-
-.company-logo {
-    max-width: 110px;
-    max-height: 52px;
-    width: auto;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-}
+/* logo-container and company-logo defined in header section above */
 
 .dashboard-sidebar {
     display: flex;

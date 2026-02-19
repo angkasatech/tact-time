@@ -3,6 +3,7 @@ import Dashboard from './components/Dashboard';
 import BarcodeScanner from './components/BarcodeScanner';
 import CategorySelector from './components/CategorySelector';
 import Login from './components/Login';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 import {
     getActiveRecording,
     saveActiveRecording,
@@ -102,7 +103,12 @@ function App() {
                     activeRecording={activeRecording}
                     onStartNew={handleStartNew}
                     onFinish={handleFinish}
+                    onOpenAnalytics={() => setView('analytics')}
                 />
+            )}
+
+            {view === 'analytics' && (
+                <AnalyticsDashboard onBack={() => setView('dashboard')} />
             )}
 
             {view === 'scanner' && (
