@@ -57,6 +57,10 @@
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-self: stretch;
 }
 
 .date-text {
@@ -78,20 +82,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--space-xs);
+    /* match datetime-display sizing exactly */
+    padding: var(--space-sm) var(--space-md);
     background: var(--bg-glass);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     backdrop-filter: blur(10px);
-    min-width: 80px;
-    min-height: 56px;
+    align-self: stretch;
+    min-width: 120px;
 }
 
 .company-logo {
-    max-width: 90px;
-    max-height: 56px;
+    max-width: 110px;
+    max-height: 52px;
     width: auto;
-    height: auto;
+    height: 100%;
     object-fit: contain;
     display: block;
 }
