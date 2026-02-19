@@ -41,7 +41,7 @@
 
 .record-card:hover {
     transform: translateX(4px);
-    border-color: var(--accent-purple);
+    border-color: #21C997;
     background: var(--bg-secondary);
 }
 
@@ -61,12 +61,12 @@
 
 .duration-badge {
     padding: 0.25rem 0.75rem;
-    background: var(--success-gradient);
+    background: #21C997;
     border-radius: var(--radius-sm);
     font-size: 0.875rem;
     font-weight: 700;
-    color: white;
-    box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+    color: #000;
+    box-shadow: 0 2px 8px rgba(33, 201, 151, 0.3);
 }
 
 .record-details {

@@ -2,11 +2,11 @@ import React from 'react';
 import './CategorySelector.css';
 
 const CATEGORIES = [
-    { id: 'mechanic', label: 'Mechanic', icon: '🔧', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-    { id: 'paint', label: 'Paint', icon: '🎨', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
-    { id: 'running', label: 'Running', icon: '🏍️', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
-    { id: 'dyno', label: 'Dyno', icon: '⚡', gradient: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)' },
-    { id: 'from-final', label: 'From Final', icon: '💬', gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }
+    { id: 'mechanic', label: 'Mechanic', icon: '🔧', bg: '#21C997', textColor: '#000' },
+    { id: 'paint', label: 'Paint', icon: '🎨', bg: '#55DAE6', textColor: '#000' },
+    { id: 'running', label: 'Running', icon: '🏍️', bg: '#1aab84', textColor: '#000' },
+    { id: 'dyno', label: 'Dyno', icon: '⚡', bg: '#f0a500', textColor: '#000' },
+    { id: 'from-final', label: 'From Final', icon: '💬', bg: '#3d3d3d', textColor: '#fff' }
 ];
 
 const CategorySelector = ({ vin, onCategorySelect }) => {
@@ -25,7 +25,7 @@ const CategorySelector = ({ vin, onCategorySelect }) => {
                     <button
                         key={category.id}
                         className="category-card"
-                        style={{ background: category.gradient }}
+                        style={{ background: category.bg, color: category.textColor }}
                         onClick={() => onCategorySelect(category.label)}
                     >
                         <div className="category-icon">{category.icon}</div>
