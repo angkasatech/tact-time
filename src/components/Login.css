@@ -87,7 +87,7 @@
 .login-logo {
     font-size: 4rem;
     margin-bottom: var(--space-md);
-    filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.5));
+    filter: drop-shadow(0 4px 12px rgba(33, 201, 151, 0.5));
     animation: pulse-glow 3s ease-in-out infinite;
 }
 
@@ -95,21 +95,18 @@
 
     0%,
     100% {
-        filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.5));
+        filter: drop-shadow(0 4px 12px rgba(33, 201, 151, 0.4));
     }
 
     50% {
-        filter: drop-shadow(0 4px 24px rgba(102, 126, 234, 0.9));
+        filter: drop-shadow(0 4px 24px rgba(33, 201, 151, 0.9));
     }
 }
 
 .login-header h1 {
     font-size: 1.75rem;
     font-weight: 800;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #21C997;
     margin-bottom: var(--space-sm);
 }
 
