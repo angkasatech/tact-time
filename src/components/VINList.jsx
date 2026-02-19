@@ -56,7 +56,7 @@ const VINList = () => {
                         <div key={record.id} className="record-card">
                             <div className="record-header">
                                 <div className="vin-number">{record.vin}</div>
-                                <div className="duration-badge">
+                                <div className={`duration-badge${record.durationMinutes > 10 ? ' duration-badge--over' : ''}`}>
                                     {formatDurationMinutes(record.durationMinutes)}
                                 </div>
                             </div>

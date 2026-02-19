@@ -69,6 +69,12 @@
     box-shadow: 0 2px 8px rgba(33, 201, 151, 0.3);
 }
 
+.duration-badge--over {
+    background: #e53935;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(229, 57, 53, 0.4);
+}
+
 .record-details {
     display: flex;
     justify-content: space-between;
