@@ -1,5 +1,6 @@
 // LocalStorage keys
 const ACTIVE_RECORDING_KEY = 'tacttime_active_recording';
+const PAUSE_STATE_PREFIX = 'tacttime_pause_state_';
 
 /**
  * Save active recording to localStorage
@@ -38,6 +39,24 @@ export const clearActiveRecording = () => {
     return true;
   } catch (error) {
     console.error('Error clearing active recording:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear all pause state keys from localStorage.
+ * Call this before starting a new recording to prevent a stale
+ * pause state from a previous session leaking in.
+ */
+export const clearPauseState = () => {
+  try {
+    // Remove any scoped pause state keys (tacttime_pause_state_<startTime>)
+    Object.keys(localStorage)
+      .filter(k => k.startsWith(PAUSE_STATE_PREFIX))
+      .forEach(k => localStorage.removeItem(k));
+    return true;
+  } catch (error) {
+    console.error('Error clearing pause state:', error);
     return false;
   }
 };

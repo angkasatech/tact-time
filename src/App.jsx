@@ -7,7 +7,8 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 import {
     getActiveRecording,
     saveActiveRecording,
-    clearActiveRecording
+    clearActiveRecording,
+    clearPauseState
 } from './utils/storage';
 import { saveRecord, initializeDatabase } from './utils/database';
 import './App.css';
@@ -56,6 +57,9 @@ function App() {
             startTime: new Date().toISOString()
         };
 
+        // Wipe any leftover pause state from a previous session (Bug 4 fix)
+        clearPauseState();
+
         // Save to localStorage
         saveActiveRecording(recording);
         setActiveRecording(recording);
@@ -63,27 +67,29 @@ function App() {
     };
 
     const handleFinish = async (totalPausedTime = 0) => {
-        if (!activeRecording) return;
+        if (!activeRecording) return false;
 
         const record = {
             vin: activeRecording.vin,
             category: activeRecording.category,
             startTime: activeRecording.startTime,
             endTime: new Date().toISOString(),
-            totalPausedTime // Store pause time in milliseconds
+            totalPausedTime
         };
 
-        // Save to database
-        const success = await saveRecord(record);
+        const result = await saveRecord(record);
 
-        if (success) {
-            // Clear active recording
+        if (result === true) {
             clearActiveRecording();
             setActiveRecording(null);
             setScannedVin('');
             setView('dashboard');
+            return true;
         } else {
-            alert('Failed to save record. Please try again.');
+            // result may be an error message string from the server (e.g. duplicate)
+            const msg = typeof result === 'string' ? result : 'Failed to save record. Please try again.';
+            alert(msg);
+            return false;
         }
     };
 

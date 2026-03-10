@@ -59,6 +59,22 @@ app.post('/api/records', (req, res) => {
         const data = JSON.parse(raw);
         const records = data.records || [];
 
+        // ── Duplicate guard: reject same VIN + category saved within 60 seconds ──
+        const DEDUP_WINDOW_MS = 60 * 1000;
+        const now = Date.now();
+        const isDuplicate = records.some(r =>
+            r.vin === newRecord.vin &&
+            r.category === newRecord.category &&
+            (now - new Date(r.dateCreated).getTime()) < DEDUP_WINDOW_MS
+        );
+
+        if (isDuplicate) {
+            console.warn(`Duplicate rejected: ${newRecord.vin} / ${newRecord.category}`);
+            return res.status(409).json({
+                error: `Duplicate record: ${newRecord.vin} (${newRecord.category}) was already saved within the last minute.`
+            });
+        }
+
         // Append new record
         records.push(newRecord);
 

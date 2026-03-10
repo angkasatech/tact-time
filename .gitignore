@@ -27,3 +27,5 @@ dist-ssr
 data/
 public/data/
 dist/data/
+
+data\records.json

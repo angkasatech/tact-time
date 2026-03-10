@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { onRecordSaved } from '../utils/database';
-import { formatDurationMinutes } from '../utils/timer';
+import { formatDurationMMSS } from '../utils/timer';
 import './VINList.css';
 
 const VINList = () => {
@@ -57,7 +57,7 @@ const VINList = () => {
                             <div className="record-header">
                                 <div className="vin-number">{record.vin}</div>
                                 <div className={`duration-badge${record.durationMinutes > 10 ? ' duration-badge--over' : ''}`}>
-                                    {formatDurationMinutes(record.durationMinutes)}
+                                    {formatDurationMMSS(record.durationMinutes)}
                                 </div>
                             </div>
                             <div className="record-details">

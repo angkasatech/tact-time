@@ -25,6 +25,19 @@ export const getElapsedTime = (startTime) => {
 };
 
 /**
+ * Format decimal minutes to MM:SS string.
+ * e.g. 6.33 → "06:20", 0.5 → "00:30", 65.0 → "65:00"
+ * @param {number} minutes - Duration in decimal minutes
+ * @returns {string}
+ */
+export const formatDurationMMSS = (minutes) => {
+    const totalSeconds = Math.round(parseFloat(minutes || 0) * 60);
+    const mm = Math.floor(totalSeconds / 60);
+    const ss = totalSeconds % 60;
+    return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+};
+
+/**
  * Format duration in minutes to readable string
  * @param {number} minutes
  * @returns {string}

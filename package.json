@@ -4,12 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "server": "node server.js",
+    "dev": "concurrently -k -n API,Vite -c cyan,magenta \"node server.js\" \"vite\"",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.4",
+    "concurrently": "^9.2.1",
     "typescript": "~5.9.3",
     "vite": "^7.3.1"
   },

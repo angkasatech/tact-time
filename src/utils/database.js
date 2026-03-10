@@ -62,8 +62,15 @@ export const saveRecord = async (record) => {
                 body: JSON.stringify(newRecord)
             });
 
-            if (!res.ok) throw new Error(`Server error: ${res.status}`);
-            return true;
+            if (res.ok) return true;
+
+            // 409 = server detected a duplicate — surface the message directly
+            if (res.status === 409) {
+                const body = await res.json().catch(() => ({}));
+                return body.error || 'Duplicate record: this VIN was already saved recently.';
+            }
+
+            throw new Error(`Server error: ${res.status}`);
         } catch (error) {
             console.error(`Save attempt ${attempt + 1} failed:`, error);
             if (attempt < maxRetries - 1) {

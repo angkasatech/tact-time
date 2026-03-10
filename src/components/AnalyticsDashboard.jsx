@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -13,7 +13,7 @@ import {
 import { Bar } from 'react-chartjs-2';
 import { getAllRecords } from '../utils/database';
 import { exportToExcel } from '../utils/excelExport';
-import { formatDurationMinutes } from '../utils/timer';
+import { formatDurationMMSS } from '../utils/timer';
 import './AnalyticsDashboard.css';
 
 ChartJS.register(
@@ -27,8 +27,8 @@ const toDateStr = (d) => d.toISOString().split('T')[0]; // YYYY-MM-DD
 
 function getWeekBounds(dateStr) {
     const d = new Date(dateStr);
-    const day = d.getDay(); // 0=Sun … 6=Sat
-    const diffToMon = (day === 0 ? -6 : 1 - day); // days to go back to Monday
+    const day = d.getDay();
+    const diffToMon = (day === 0 ? -6 : 1 - day);
     const mon = new Date(d);
     mon.setDate(d.getDate() + diffToMon);
     const sun = new Date(mon);
@@ -46,38 +46,75 @@ function getMonthBounds(dateStr) {
 
 function filterRecords(records, mode, dateStr) {
     const recDate = (r) => toDateStr(new Date(r.dateCreated));
-    if (mode === 'date') {
-        return records.filter(r => recDate(r) === dateStr);
-    }
+    // Only include valid VINs (17+ characters) — strips test/dummy entries
+    const validVin = (r) => r.vin && r.vin.trim().length >= 17;
+    if (mode === 'date') return records.filter(r => validVin(r) && recDate(r) === dateStr);
     if (mode === 'weekly') {
         const { start, end } = getWeekBounds(dateStr);
-        return records.filter(r => recDate(r) >= start && recDate(r) <= end);
+        return records.filter(r => validVin(r) && recDate(r) >= start && recDate(r) <= end);
     }
     if (mode === 'monthly') {
         const { start, end } = getMonthBounds(dateStr);
-        return records.filter(r => recDate(r) >= start && recDate(r) <= end);
+        return records.filter(r => validVin(r) && recDate(r) >= start && recDate(r) <= end);
     }
-    return records;
+    return records.filter(validVin);
 }
 
 // Truncate long VINs for chart label
 const shortVin = (vin) => vin.length > 10 ? vin.slice(-10) : vin;
 
+// Custom Chart.js plugin: red dashed line at y=10
+const targetLinePlugin = {
+    id: 'targetLine',
+    afterDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        if (!chartArea) return;
+        const y = scales.y.getPixelForValue(10);
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(chartArea.left, y);
+        ctx.lineTo(chartArea.right, y);
+        ctx.strokeStyle = '#e53935';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#e53935';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.fillText('10 min target', chartArea.right - 92, y - 6);
+        ctx.restore();
+    },
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 const AnalyticsDashboard = ({ onBack }) => {
     const [allRecords, setAllRecords] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [mode, setMode] = useState('date');                 // 'date' | 'weekly' | 'monthly'
-    const [dateStr, setDateStr] = useState(toDateStr(new Date())); // default today
+    const [lastRefresh, setLastRefresh] = useState(null);
+    const [mode, setMode] = useState('date');
+    const [dateStr, setDateStr] = useState(toDateStr(new Date()));
     const [sortField, setSortField] = useState('dateCreated');
     const [sortAsc, setSortAsc] = useState(false);
 
-    useEffect(() => {
-        getAllRecords().then(r => {
+    // ── Fetch records (memoised so it can be called manually too) ──
+    const fetchRecords = useCallback(async () => {
+        try {
+            const r = await getAllRecords();
             setAllRecords(r);
+            setLastRefresh(new Date());
+        } catch {
+            // keep current data on error
+        } finally {
             setLoading(false);
-        });
+        }
     }, []);
+
+    // Initial load + auto-refresh every 60 seconds
+    useEffect(() => {
+        fetchRecords();
+        const interval = setInterval(fetchRecords, 60000);
+        return () => clearInterval(interval);
+    }, [fetchRecords]);
 
     // Filtered records
     const filtered = useMemo(
@@ -103,20 +140,17 @@ const AnalyticsDashboard = ({ onBack }) => {
         const durations = filtered.map(r => parseFloat(r.durationMinutes) || 0);
         const colors = durations.map(d => d > 10 ? 'rgba(229,57,53,0.85)' : 'rgba(33,201,151,0.85)');
         const borders = durations.map(d => d > 10 ? '#e53935' : '#21C997');
-
         return {
             labels,
-            datasets: [
-                {
-                    label: 'Duration (min)',
-                    data: durations,
-                    backgroundColor: colors,
-                    borderColor: borders,
-                    borderWidth: 2,
-                    borderRadius: 6,
-                    borderSkipped: false,
-                },
-            ],
+            datasets: [{
+                label: 'Duration (min)',
+                data: durations,
+                backgroundColor: colors,
+                borderColor: borders,
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+            }],
         };
     }, [filtered]);
 
@@ -127,13 +161,16 @@ const AnalyticsDashboard = ({ onBack }) => {
             legend: { display: false },
             tooltip: {
                 callbacks: {
-                    title: (items) => {
-                        const idx = items[0].dataIndex;
-                        return filtered[idx]?.vin || '';
+                    title: (items) => filtered[items[0].dataIndex]?.vin || '',
+                    // Show tooltip in MM:SS format too
+                    label: (item) => {
+                        const mm = Math.floor(item.raw);
+                        const ss = Math.round((item.raw - mm) * 60);
+                        return ` ${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
                     },
-                    label: (item) => ` ${item.raw.toFixed(1)} min`,
                 },
             },
+            targetLine: {},
         },
         scales: {
             x: {
@@ -147,41 +184,6 @@ const AnalyticsDashboard = ({ onBack }) => {
                 title: { display: true, text: 'Minutes', color: '#888' },
             },
         },
-        // Draw 10-min target line via plugin
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                callbacks: {
-                    title: (items) => filtered[items[0].dataIndex]?.vin || '',
-                    label: (item) => ` ${item.raw.toFixed(1)} min`,
-                },
-            },
-            targetLine: {}, // handled by custom plugin below
-        },
-    };
-
-    // Custom plugin: red dashed line at y=10
-    const targetLinePlugin = {
-        id: 'targetLine',
-        afterDraw(chart) {
-            const { ctx, chartArea, scales } = chart;
-            if (!chartArea) return;
-            const y = scales.y.getPixelForValue(10);
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(chartArea.left, y);
-            ctx.lineTo(chartArea.right, y);
-            ctx.strokeStyle = '#e53935';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([8, 4]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            // Label
-            ctx.fillStyle = '#e53935';
-            ctx.font = 'bold 11px Inter, sans-serif';
-            ctx.fillText('10 min target', chartArea.right - 92, y - 6);
-            ctx.restore();
-        },
     };
 
     // Stats
@@ -190,9 +192,11 @@ const AnalyticsDashboard = ({ onBack }) => {
         const durations = filtered.map(r => parseFloat(r.durationMinutes) || 0);
         const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
         const over = durations.filter(d => d > 10).length;
+        const uniqueVins = new Set(filtered.map(r => r.vin.trim().toUpperCase())).size;
         return {
             total: filtered.length,
-            avg: avg.toFixed(1),
+            uniqueVins,
+            avgMMSS: formatDurationMMSS(avg),
             over,
             onTime: filtered.length - over,
         };
@@ -211,7 +215,7 @@ const AnalyticsDashboard = ({ onBack }) => {
             const { start, end } = getWeekBounds(dateStr);
             return `${start} – ${end}`;
         }
-        const [y, m] = dateStr.split('-');
+        const [y] = dateStr.split('-');
         return `${new Date(dateStr).toLocaleString('default', { month: 'long' })} ${y}`;
     }, [mode, dateStr]);
 
@@ -226,9 +230,19 @@ const AnalyticsDashboard = ({ onBack }) => {
                     <h1>📊 Analytics Dashboard</h1>
                     <span className="analytics-period">{periodLabel}</span>
                 </div>
-                <button className="btn btn-primary analytics-export" onClick={handleExport}>
-                    ⬇ Export Excel
-                </button>
+                <div className="analytics-header-right">
+                    <button className="btn btn-ghost analytics-refresh" onClick={fetchRecords} title="Refresh now">
+                        🔄 Refresh
+                        {lastRefresh && (
+                            <span className="refresh-time">
+                                {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            </span>
+                        )}
+                    </button>
+                    <button className="btn btn-primary analytics-export" onClick={handleExport}>
+                        ⬇ Export Excel
+                    </button>
+                </div>
             </div>
 
             {/* Filter bar */}
@@ -253,6 +267,7 @@ const AnalyticsDashboard = ({ onBack }) => {
                         setDateStr(mode === 'monthly' ? v + '-01' : v);
                     }}
                 />
+                <span className="auto-refresh-badge">🔁 Auto-refresh: 1 min</span>
             </div>
 
             {loading ? (
@@ -266,10 +281,14 @@ const AnalyticsDashboard = ({ onBack }) => {
                         <div className="analytics-stats">
                             <div className="stat-card glass-card">
                                 <div className="stat-value">{stats.total}</div>
-                                <div className="stat-label">Total VINs</div>
+                                <div className="stat-label">Total Records</div>
+                            </div>
+                            <div className="stat-card glass-card stat-teal">
+                                <div className="stat-value">{stats.uniqueVins}</div>
+                                <div className="stat-label">Unique VINs</div>
                             </div>
                             <div className="stat-card glass-card">
-                                <div className="stat-value">{stats.avg} min</div>
+                                <div className="stat-value">{stats.avgMMSS}</div>
                                 <div className="stat-label">Avg Duration</div>
                             </div>
                             <div className="stat-card glass-card stat-green">
@@ -334,7 +353,7 @@ const AnalyticsDashboard = ({ onBack }) => {
                                                     <td><span className="badge">{r.category}</span></td>
                                                     <td>
                                                         <span className={`duration-badge${r.durationMinutes > 10 ? ' duration-badge--over' : ''}`}>
-                                                            {formatDurationMinutes(r.durationMinutes)}
+                                                            {formatDurationMMSS(r.durationMinutes)}
                                                         </span>
                                                     </td>
                                                     <td className="time-cell">
