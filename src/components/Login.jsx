@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Timer, AlertCircle, Loader2, LogIn } from 'lucide-react';
 import './Login.css';
 
 // Hardcoded credentials for on-premise internal use
@@ -48,7 +49,7 @@ const Login = ({ onLogin }) => {
             <div className="login-container">
                 <div className="login-card glass-card">
                     <div className="login-header">
-                        <div className="login-logo">⏱️</div>
+                        <div className="login-logo"><Timer size={40} strokeWidth={1.5} /></div>
                         <h1>Tact Time Tracker</h1>
                         <p>Sign in to continue</p>
                     </div>
@@ -83,7 +84,7 @@ const Login = ({ onLogin }) => {
 
                         {error && (
                             <div className="login-error">
-                                ⚠️ {error}
+                                <AlertCircle size={15} /> {error}
                             </div>
                         )}
 
@@ -92,7 +93,9 @@ const Login = ({ onLogin }) => {
                             className="btn btn-primary btn-login"
                             disabled={isLoading || !username || !password}
                         >
-                            {isLoading ? '⏳ Signing in...' : '🔐 Sign In'}
+                            {isLoading
+                                ? <><Loader2 size={17} className="spin-icon" /> Signing in…</>
+                                : <><LogIn size={17} /> Sign In</>}
                         </button>
                     </form>
 

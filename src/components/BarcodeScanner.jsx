@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Keyboard, Camera, ScanLine, Lightbulb, Video, VideoOff, ArrowRight } from 'lucide-react';
 import './BarcodeScanner.css';
 
 const BarcodeScanner = ({ onScanComplete }) => {
@@ -94,7 +95,9 @@ const BarcodeScanner = ({ onScanComplete }) => {
             <div className="scanner-header">
                 <h2>Scan VIN Number</h2>
                 <button className="btn btn-secondary" onClick={toggleMode}>
-                    {mode === 'camera' ? '📝 Manual Input' : '📷 Use Camera'}
+                    {mode === 'camera'
+                        ? <><Keyboard size={15} /> Manual Input</>
+                        : <><Camera size={15} /> Use Camera</>}
                 </button>
             </div>
 
@@ -102,8 +105,8 @@ const BarcodeScanner = ({ onScanComplete }) => {
                 <div className="camera-mode">
                     {!isScanning && (
                         <div className="scan-instructions">
-                            <p>📱 Position the barcode horizontally within the box</p>
-                            <p>💡 Keep steady and ensure good lighting</p>
+                            <p><ScanLine size={15} /> Position the barcode horizontally within the box</p>
+                            <p><Lightbulb size={15} /> Keep steady and ensure good lighting</p>
                         </div>
                     )}
                     <div id="qr-reader" ref={scannerRef} className="qr-reader"></div>
@@ -113,11 +116,11 @@ const BarcodeScanner = ({ onScanComplete }) => {
                     <div className="scanner-controls">
                         {!isScanning ? (
                             <button className="btn btn-primary" onClick={startScanning}>
-                                🎥 Start Camera
+                                <Video size={16} /> Start Camera
                             </button>
                         ) : (
                             <button className="btn btn-secondary" onClick={stopScanning}>
-                                ⏹️ Stop Camera
+                                <VideoOff size={16} /> Stop Camera
                             </button>
                         )}
                     </div>
@@ -140,7 +143,7 @@ const BarcodeScanner = ({ onScanComplete }) => {
                             className="btn btn-primary w-full"
                             disabled={!manualInput.trim()}
                         >
-                            ✅ Submit VIN
+                            <ArrowRight size={16} /> Submit VIN
                         </button>
                     </form>
                 </div>

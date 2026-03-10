@@ -12,8 +12,9 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { getAllRecords } from '../utils/database';
-import { exportToExcel } from '../utils/excelExport';
+import { exportToExcel, exportVINSummary } from '../utils/excelExport';
 import { formatDurationMMSS } from '../utils/timer';
+import { BarChart3, RefreshCw, FileSpreadsheet, ClipboardList, RotateCcw } from 'lucide-react';
 import './AnalyticsDashboard.css';
 
 ChartJS.register(
@@ -191,14 +192,24 @@ const AnalyticsDashboard = ({ onBack }) => {
         if (!filtered.length) return null;
         const durations = filtered.map(r => parseFloat(r.durationMinutes) || 0);
         const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
-        const over = durations.filter(d => d > 10).length;
+        const overRecord = durations.filter(d => d > 10).length;
         const uniqueVins = new Set(filtered.map(r => r.vin.trim().toUpperCase())).size;
+
+        // Group by VIN → sum durations → count VINs whose total > 10 min
+        const vinTotals = new Map();
+        for (const r of filtered) {
+            const key = r.vin.trim().toUpperCase();
+            vinTotals.set(key, (vinTotals.get(key) || 0) + (parseFloat(r.durationMinutes) || 0));
+        }
+        const vinNGCount = [...vinTotals.values()].filter(t => t > 10).length;
+
         return {
             total: filtered.length,
             uniqueVins,
             avgMMSS: formatDurationMMSS(avg),
-            over,
-            onTime: filtered.length - over,
+            overRecord,
+            onTime: filtered.length - overRecord,
+            vinNGCount,
         };
     }, [filtered]);
 
@@ -208,6 +219,7 @@ const AnalyticsDashboard = ({ onBack }) => {
     };
 
     const handleExport = () => exportToExcel(filtered);
+    const handleExportVINSummary = () => exportVINSummary(filtered);
 
     const periodLabel = useMemo(() => {
         if (mode === 'date') return dateStr;
@@ -227,20 +239,24 @@ const AnalyticsDashboard = ({ onBack }) => {
                     ← Back
                 </button>
                 <div className="analytics-title">
-                    <h1>📊 Analytics Dashboard</h1>
+                    <h1><BarChart3 size={24} strokeWidth={2} /> Analytics Dashboard</h1>
                     <span className="analytics-period">{periodLabel}</span>
                 </div>
                 <div className="analytics-header-right">
                     <button className="btn btn-ghost analytics-refresh" onClick={fetchRecords} title="Refresh now">
-                        🔄 Refresh
+                        <RefreshCw size={14} />
+                        Refresh
                         {lastRefresh && (
                             <span className="refresh-time">
                                 {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                             </span>
                         )}
                     </button>
+                    <button className="btn btn-secondary analytics-export" onClick={handleExportVINSummary} title="One row per VIN, total duration">
+                        <ClipboardList size={15} /> VIN Summary
+                    </button>
                     <button className="btn btn-primary analytics-export" onClick={handleExport}>
-                        ⬇ Export Excel
+                        <FileSpreadsheet size={15} /> Export Detail
                     </button>
                 </div>
             </div>
@@ -267,7 +283,7 @@ const AnalyticsDashboard = ({ onBack }) => {
                         setDateStr(mode === 'monthly' ? v + '-01' : v);
                     }}
                 />
-                <span className="auto-refresh-badge">🔁 Auto-refresh: 1 min</span>
+                <span className="auto-refresh-badge"><RotateCcw size={11} /> Auto-refresh: 1 min</span>
             </div>
 
             {loading ? (
@@ -296,8 +312,12 @@ const AnalyticsDashboard = ({ onBack }) => {
                                 <div className="stat-label">On Time (≤10 min)</div>
                             </div>
                             <div className="stat-card glass-card stat-red">
-                                <div className="stat-value">{stats.over}</div>
-                                <div className="stat-label">Over Target ({'>'} 10 min)</div>
+                                <div className="stat-value">{stats.overRecord}</div>
+                                <div className="stat-label">Records &gt; 10 min</div>
+                            </div>
+                            <div className="stat-card glass-card stat-red">
+                                <div className="stat-value">{stats.vinNGCount}</div>
+                                <div className="stat-label">VINs NG (total &gt; 10 min)</div>
                             </div>
                         </div>
                     )}

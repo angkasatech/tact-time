@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { formatElapsedTime, getElapsedTime } from '../utils/timer';
+import { Play, PauseCircle, CheckCircle, Loader2 } from 'lucide-react';
 import './ActiveTimer.css';
 
 const PAUSE_STATE_PREFIX = 'tacttime_pause_state_';
@@ -173,11 +174,11 @@ const ActiveTimer = ({ vin, category, startTime, onFinish }) => {
             <div className="timer-actions">
                 {isPaused ? (
                     <button className="btn btn-primary btn-resume" onClick={handleResume} disabled={isSubmitting}>
-                        ▶️ Resume
+                        <Play size={18} /> Resume
                     </button>
                 ) : (
                     <button className="btn btn-warning btn-pause" onClick={handlePause} disabled={isSubmitting}>
-                        ⏸️ Pause
+                        <PauseCircle size={18} /> Pause
                     </button>
                 )}
                 <button
@@ -186,9 +187,9 @@ const ActiveTimer = ({ vin, category, startTime, onFinish }) => {
                     disabled={isSubmitting}
                 >
                     {isSubmitting ? (
-                        <><span className="submit-spinner" /> Saving…</>
+                        <><Loader2 size={18} className="spin-icon" /> Saving…</>
                     ) : (
-                        <>✅ Finish Recording</>
+                        <><CheckCircle size={18} /> Finish Recording</>
                     )}
                 </button>
             </div>

@@ -160,6 +160,12 @@
     flex-shrink: 0;
 }
 
+/* Lucide Loader2 spin — apply to any icon that should rotate */
+.spin-icon {
+    animation: spin-ring 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
 @keyframes spin-ring {
     to { transform: rotate(360deg); }
 }

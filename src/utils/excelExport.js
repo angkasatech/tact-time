@@ -1,10 +1,26 @@
 import * as XLSX from 'xlsx';
 import { formatDurationMMSS } from './timer';
 
+// ─── Helper ───────────────────────────────────────────────────────────────────
+
+/** Format a Date to dd/mm/yy */
+const fmtDate = (d) => {
+    const dt = new Date(d);
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const yy = String(dt.getFullYear()).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+};
+
+/** Only include valid VINs (17+ chars) — same rule as analytics dashboard */
+const isValidVin = (r) => r.vin && r.vin.trim().length >= 17;
+
+// ─── Detail Export ────────────────────────────────────────────────────────────
+
 /**
- * Export records to Excel file.
- * Only includes valid VINs (17+ characters) — same filter as the analytics dashboard.
- * @param {Array} records - Array of record objects
+ * Export all records (one row per record) to Excel.
+ * Only valid VINs (≥17 chars) are included.
+ * @param {Array} records
  */
 export const exportToExcel = (records) => {
     if (!records || records.length === 0) {
@@ -12,15 +28,12 @@ export const exportToExcel = (records) => {
         return;
     }
 
-    // Apply the same valid-VIN filter as the dashboard
-    const validRecords = records.filter(r => r.vin && r.vin.trim().length >= 17);
-
+    const validRecords = records.filter(isValidVin);
     if (validRecords.length === 0) {
         alert('No valid records to export (all entries are test/dummy VINs).');
         return;
     }
 
-    // Prepare data for Excel
     const excelData = validRecords.map(record => ({
         'ID': record.id,
         'Date Created': new Date(record.dateCreated).toLocaleString(),
@@ -34,10 +47,7 @@ export const exportToExcel = (records) => {
         'Break Time (Seconds)': Math.round((record.totalPausedTime || 0) / 1000),
     }));
 
-    // Create worksheet
     const worksheet = XLSX.utils.json_to_sheet(excelData);
-
-    // Set column widths
     worksheet['!cols'] = [
         { wch: 22 }, // ID
         { wch: 20 }, // Date Created
@@ -51,14 +61,90 @@ export const exportToExcel = (records) => {
         { wch: 20 }, // Break Time (Seconds)
     ];
 
-    // Create workbook
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Tact Time Records');
 
-    // Generate filename with current date
     const date = new Date().toISOString().split('T')[0];
-    const filename = `TactTime_Records_${date}.xlsx`;
+    XLSX.writeFile(workbook, `TactTime_Records_${date}.xlsx`);
+};
 
-    // Download file
-    XLSX.writeFile(workbook, filename);
+// ─── VIN Summary Export ───────────────────────────────────────────────────────
+
+/**
+ * Export one row per unique VIN, summing duration and break time across all
+ * categories. Status = "NG" if total duration > 10 minutes, else "OK".
+ * Only valid VINs (≥17 chars) are included.
+ * @param {Array} records
+ */
+export const exportVINSummary = (records) => {
+    if (!records || records.length === 0) {
+        alert('No data to export');
+        return;
+    }
+
+    const validRecords = records.filter(isValidVin);
+    if (validRecords.length === 0) {
+        alert('No valid records to export (all entries are test/dummy VINs).');
+        return;
+    }
+
+    // Group by VIN (case-insensitive, trimmed)
+    const vinMap = new Map();
+    for (const r of validRecords) {
+        const key = r.vin.trim().toUpperCase();
+        if (!vinMap.has(key)) {
+            vinMap.set(key, {
+                vin: r.vin.trim(),
+                latestDate: r.dateCreated,
+                categories: new Set(),
+                totalDurationMinutes: 0,
+                totalPausedMs: 0,
+            });
+        }
+        const entry = vinMap.get(key);
+        // Track the latest completion date for this VIN
+        if (new Date(r.dateCreated) > new Date(entry.latestDate)) {
+            entry.latestDate = r.dateCreated;
+        }
+        entry.categories.add(r.category);
+        entry.totalDurationMinutes += parseFloat(r.durationMinutes) || 0;
+        entry.totalPausedMs += parseFloat(r.totalPausedTime) || 0;
+    }
+
+    const excelData = Array.from(vinMap.values()).map(v => {
+        const isNG = v.totalDurationMinutes > 10;
+        return {
+            'Date (dd/mm/yy)': fmtDate(v.latestDate),
+            'VIN Number': v.vin,
+            'Category': Array.from(v.categories).join(', '),
+            'Duration (MM:SS)': formatDurationMMSS(v.totalDurationMinutes),
+            'Break Time (MM:SS)': formatDurationMMSS(v.totalPausedMs / 60000),
+            'Status': isNG ? 'NG' : 'OK',
+        };
+    });
+
+    // Sort by date desc then VIN
+    excelData.sort((a, b) => {
+        if (a['Date (dd/mm/yy)'] < b['Date (dd/mm/yy)']) return 1;
+        if (a['Date (dd/mm/yy)'] > b['Date (dd/mm/yy)']) return -1;
+        return a['VIN Number'].localeCompare(b['VIN Number']);
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Style header row bold (basic)
+    worksheet['!cols'] = [
+        { wch: 14 }, // Date
+        { wch: 20 }, // VIN Number
+        { wch: 28 }, // Category
+        { wch: 16 }, // Duration
+        { wch: 16 }, // Break Time
+        { wch: 8  }, // Status
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'VIN Summary');
+
+    const date = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(workbook, `TactTime_VIN_Summary_${date}.xlsx`);
 };

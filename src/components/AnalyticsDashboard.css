@@ -29,6 +29,9 @@
     color: #21C997;
     -webkit-text-fill-color: #21C997;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .analytics-period {
@@ -82,6 +85,9 @@
     opacity: 0.7;
     white-space: nowrap;
     font-style: italic;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
 /* ─── Filters ───────────────────────────────────────────────────────────────── */
@@ -140,7 +146,7 @@
 /* ─── Stats strip ───────────────────────────────────────────────────────────── */
 .analytics-stats {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: var(--space-md);
 }
 
@@ -326,7 +332,7 @@
 }
 
 /* ─── Responsive ────────────────────────────────────────────────────────────── */
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
     .analytics-stats {
         grid-template-columns: repeat(3, 1fr);
     }

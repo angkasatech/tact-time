@@ -3,6 +3,7 @@ import ActiveTimer from './ActiveTimer';
 import VINList from './VINList';
 import { exportToExcel } from '../utils/excelExport';
 import { getAllRecords } from '../utils/database';
+import { BarChart3 } from 'lucide-react';
 import './Dashboard.css';
 
 const Dashboard = ({ activeRecording, onStartNew, onFinish, onOpenAnalytics }) => {
@@ -48,7 +49,7 @@ const Dashboard = ({ activeRecording, onStartNew, onFinish, onOpenAnalytics }) =
                             className="btn btn-secondary analytics-nav-btn"
                             onClick={onOpenAnalytics}
                         >
-                            📊 Analytics
+                            <BarChart3 size={16} /> Analytics
                         </button>
                         <div className="datetime-display">
                             <div className="date-text">{currentTime.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</div>
