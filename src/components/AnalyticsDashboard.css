@@ -179,8 +179,19 @@
     color: #00bcd4;
 }
 
+.stat-card.stat-blue .stat-value {
+    color: #5b8dee;
+}
+
 .stat-card.stat-red .stat-value {
     color: #e53935;
+}
+
+.stat-sublabel {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    opacity: 0.65;
+    margin-top: 0.15rem;
 }
 
 /* ─── Chart ─────────────────────────────────────────────────────────────────── */
@@ -235,6 +246,63 @@
     margin-bottom: var(--space-md);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* ─── Table tabs ─────────────────────────────────────────────────────────────── */
+.table-tab-bar {
+    display: flex;
+    gap: 2px;
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.table-tab-btn {
+    background: transparent;
+    border: none;
+    padding: 0.45rem 1.1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    font-family: var(--font-primary);
+    letter-spacing: 0.3px;
+}
+
+.table-tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+}
+
+.table-tab-btn.active {
+    background: #21C997;
+    color: #000;
+}
+
+/* Status badge: OK / NG */
+.status-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.status-badge--ok {
+    background: rgba(33, 201, 151, 0.18);
+    color: #21C997;
+    border: 1px solid rgba(33, 201, 151, 0.35);
+}
+
+.status-badge--ng {
+    background: rgba(229, 57, 53, 0.18);
+    color: #e53935;
+    border: 1px solid rgba(229, 57, 53, 0.35);
 }
 
 .analytics-table-wrap {

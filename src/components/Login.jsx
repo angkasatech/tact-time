@@ -50,6 +50,8 @@ const Login = ({ onLogin }) => {
                 <div className="login-card glass-card">
                     <div className="login-header">
                         <div className="login-logo"><Timer size={40} strokeWidth={1.5} /></div>
+                        <h2>ALVA</h2>
+                        <h1>Direct Pass</h1>
                         <h1>Tact Time Tracker</h1>
                         <p>Sign in to continue</p>
                     </div>

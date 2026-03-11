@@ -41,7 +41,7 @@ const Dashboard = ({ activeRecording, onStartNew, onFinish, onOpenAnalytics }) =
                         <img src="/logo.png" alt="Company Logo" className="company-logo" />
                     </div>
                     <div className="header-title">
-                        <h1>Tact Time Tracker</h1>
+                        <h1>Direct Pass - ALVA</h1>
                         <p className="dashboard-subtitle">Record repair station tact times</p>
                     </div>
                     <div className="header-right">

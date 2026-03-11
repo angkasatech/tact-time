@@ -15,7 +15,7 @@ function App() {
                 justifyContent: 'center'
             }}>
                 <h1 style={{ fontSize: '3rem', marginBottom: '2rem' }}>
-                    ⏱️ Tact Time Tracker
+                    ⏱️ Tact Time Tracker [Direct Pass - ALVA]
                 </h1>
                 <p style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>
                     Testing... If you see this, React is working!

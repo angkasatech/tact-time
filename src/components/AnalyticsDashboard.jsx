@@ -96,6 +96,7 @@ const AnalyticsDashboard = ({ onBack }) => {
     const [dateStr, setDateStr] = useState(toDateStr(new Date()));
     const [sortField, setSortField] = useState('dateCreated');
     const [sortAsc, setSortAsc] = useState(false);
+    const [tableTab, setTableTab] = useState('vin'); // 'vin' | 'records'
 
     // ── Fetch records (memoised so it can be called manually too) ──
     const fetchRecords = useCallback(async () => {
@@ -135,25 +136,56 @@ const AnalyticsDashboard = ({ onBack }) => {
         });
     }, [filtered, sortField, sortAsc]);
 
-    // Chart data — bar per record
+    // VIN Summary rows — group by VIN, sum durations, exclude From Final
+    const vinSummaryRows = useMemo(() => {
+        const map = new Map();
+        for (const r of filtered) {
+            const key = r.vin.trim().toUpperCase();
+            if (!map.has(key)) {
+                map.set(key, {
+                    vin: r.vin.trim(),
+                    latestDate: r.dateCreated,
+                    categories: new Set(),
+                    totalMin: 0,
+                    totalPausedMs: 0,
+                });
+            }
+            const e = map.get(key);
+            if (new Date(r.dateCreated) > new Date(e.latestDate)) e.latestDate = r.dateCreated;
+            e.categories.add(r.category);
+            if (r.category !== 'From Final') {
+                e.totalMin += parseFloat(r.durationMinutes) || 0;
+                e.totalPausedMs += parseFloat(r.totalPausedTime) || 0;
+            }
+        }
+        return [...map.values()].sort((a, b) =>
+            new Date(b.latestDate) - new Date(a.latestDate)
+        );
+    }, [filtered]);
+
+    // Chart data — switches with the active tab
     const chartData = useMemo(() => {
-        const labels = filtered.map(r => shortVin(r.vin));
+        if (tableTab === 'vin') {
+            // One bar per unique VIN, total duration excl. From Final
+            const labels   = vinSummaryRows.map(v => shortVin(v.vin));
+            const durations = vinSummaryRows.map(v => v.totalMin);
+            const colors   = durations.map(d => d >= 10 ? 'rgba(229,57,53,0.85)' : 'rgba(33,201,151,0.85)');
+            const borders  = durations.map(d => d >= 10 ? '#e53935' : '#21C997');
+            return {
+                labels,
+                datasets: [{ label: 'Total Duration (min)', data: durations, backgroundColor: colors, borderColor: borders, borderWidth: 2, borderRadius: 6, borderSkipped: false }],
+            };
+        }
+        // One bar per record
+        const labels   = filtered.map(r => shortVin(r.vin));
         const durations = filtered.map(r => parseFloat(r.durationMinutes) || 0);
-        const colors = durations.map(d => d > 10 ? 'rgba(229,57,53,0.85)' : 'rgba(33,201,151,0.85)');
-        const borders = durations.map(d => d > 10 ? '#e53935' : '#21C997');
+        const colors   = durations.map(d => d > 10 ? 'rgba(229,57,53,0.85)' : 'rgba(33,201,151,0.85)');
+        const borders  = durations.map(d => d > 10 ? '#e53935' : '#21C997');
         return {
             labels,
-            datasets: [{
-                label: 'Duration (min)',
-                data: durations,
-                backgroundColor: colors,
-                borderColor: borders,
-                borderWidth: 2,
-                borderRadius: 6,
-                borderSkipped: false,
-            }],
+            datasets: [{ label: 'Duration (min)', data: durations, backgroundColor: colors, borderColor: borders, borderWidth: 2, borderRadius: 6, borderSkipped: false }],
         };
-    }, [filtered]);
+    }, [tableTab, filtered, vinSummaryRows]);
 
     const chartOptions = {
         responsive: true,
@@ -167,7 +199,7 @@ const AnalyticsDashboard = ({ onBack }) => {
                     label: (item) => {
                         const mm = Math.floor(item.raw);
                         const ss = Math.round((item.raw - mm) * 60);
-                        return ` ${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+                        return ` ${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
                     },
                 },
             },
@@ -192,24 +224,30 @@ const AnalyticsDashboard = ({ onBack }) => {
         if (!filtered.length) return null;
         const durations = filtered.map(r => parseFloat(r.durationMinutes) || 0);
         const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
-        const overRecord = durations.filter(d => d > 10).length;
-        const uniqueVins = new Set(filtered.map(r => r.vin.trim().toUpperCase())).size;
 
-        // Group by VIN → sum durations → count VINs whose total > 10 min
+        const uniqueVinSet = new Set(filtered.map(r => r.vin.trim().toUpperCase()));
+        const uniqueVins = uniqueVinSet.size;
+
+        // Per-VIN totals EXCLUDING "From Final" category for the OK/NG threshold check
         const vinTotals = new Map();
+        for (const key of uniqueVinSet) vinTotals.set(key, 0); // init all VINs at 0
         for (const r of filtered) {
+            if (r.category === 'From Final') continue;
             const key = r.vin.trim().toUpperCase();
             vinTotals.set(key, (vinTotals.get(key) || 0) + (parseFloat(r.durationMinutes) || 0));
         }
-        const vinNGCount = [...vinTotals.values()].filter(t => t > 10).length;
+
+        const vinOKCount = [...vinTotals.values()].filter(t => t < 10).length;
+        const vinNGCount = [...vinTotals.values()].filter(t => t >= 10).length;
+        const okRatio = uniqueVins > 0 ? Math.round((vinOKCount / uniqueVins) * 100) : 0;
 
         return {
             total: filtered.length,
             uniqueVins,
             avgMMSS: formatDurationMMSS(avg),
-            overRecord,
-            onTime: filtered.length - overRecord,
+            vinOKCount,
             vinNGCount,
+            okRatio,
         };
     }, [filtered]);
 
@@ -308,16 +346,19 @@ const AnalyticsDashboard = ({ onBack }) => {
                                 <div className="stat-label">Avg Duration</div>
                             </div>
                             <div className="stat-card glass-card stat-green">
-                                <div className="stat-value">{stats.onTime}</div>
-                                <div className="stat-label">On Time (≤10 min)</div>
-                            </div>
-                            <div className="stat-card glass-card stat-red">
-                                <div className="stat-value">{stats.overRecord}</div>
-                                <div className="stat-label">Records &gt; 10 min</div>
+                                <div className="stat-value">{stats.vinOKCount}</div>
+                                <div className="stat-label">VINs OK &lt;10 min</div>
+                                <div className="stat-sublabel">(excl. From Final)</div>
                             </div>
                             <div className="stat-card glass-card stat-red">
                                 <div className="stat-value">{stats.vinNGCount}</div>
-                                <div className="stat-label">VINs NG (total &gt; 10 min)</div>
+                                <div className="stat-label">VINs NG &ge;10 min</div>
+                                <div className="stat-sublabel">(excl. From Final)</div>
+                            </div>
+                            <div className="stat-card glass-card stat-blue">
+                                <div className="stat-value">{stats.okRatio}%</div>
+                                <div className="stat-label">DIRECT PASS</div>
+                                <div className="stat-sublabel">OK / Total</div>
                             </div>
                         </div>
                     )}
@@ -330,7 +371,7 @@ const AnalyticsDashboard = ({ onBack }) => {
                         <>
                             {/* Chart */}
                             <div className="analytics-chart-card glass-card">
-                                <h3>Tact Time per VIN</h3>
+                                <h3>{tableTab === 'vin' ? 'Tact Time per VIN — excl. From Final' : 'Tact Time per Record'}</h3>
                                 <div className="analytics-chart-wrap">
                                     <Bar
                                         data={chartData}
@@ -345,45 +386,107 @@ const AnalyticsDashboard = ({ onBack }) => {
                                 </div>
                             </div>
 
-                            {/* Table */}
+                            {/* Tabbed Records / VIN Summary */}
                             <div className="analytics-table-card glass-card">
-                                <h3>Record Details</h3>
-                                <div className="analytics-table-wrap">
-                                    <table className="analytics-table">
-                                        <thead>
-                                            <tr>
-                                                <th onClick={() => handleSort('vin')} className="sortable">
-                                                    VIN {sortField === 'vin' ? (sortAsc ? '↑' : '↓') : ''}
-                                                </th>
-                                                <th onClick={() => handleSort('category')} className="sortable">
-                                                    Category {sortField === 'category' ? (sortAsc ? '↑' : '↓') : ''}
-                                                </th>
-                                                <th onClick={() => handleSort('durationMinutes')} className="sortable">
-                                                    Duration {sortField === 'durationMinutes' ? (sortAsc ? '↑' : '↓') : ''}
-                                                </th>
-                                                <th onClick={() => handleSort('dateCreated')} className="sortable">
-                                                    Time {sortField === 'dateCreated' ? (sortAsc ? '↑' : '↓') : ''}
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {sorted.map(r => (
-                                                <tr key={r.id}>
-                                                    <td className="vin-cell">{r.vin}</td>
-                                                    <td><span className="badge">{r.category}</span></td>
-                                                    <td>
-                                                        <span className={`duration-badge${r.durationMinutes > 10 ? ' duration-badge--over' : ''}`}>
-                                                            {formatDurationMMSS(r.durationMinutes)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="time-cell">
-                                                        {new Date(r.dateCreated).toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                <div className="table-tab-bar">
+                                    <button
+                                        className={`table-tab-btn${tableTab === 'vin' ? ' active' : ''}`}
+                                        onClick={() => setTableTab('vin')}
+                                    >
+                                        VIN Summary
+                                    </button>
+                                    <button
+                                        className={`table-tab-btn${tableTab === 'records' ? ' active' : ''}`}
+                                        onClick={() => setTableTab('records')}
+                                    >
+                                        All Records
+                                    </button>
                                 </div>
+
+                                {tableTab === 'vin' ? (
+                                    /* ── Tab 1: VIN Summary (excl. From Final) ── */
+                                    <div className="analytics-table-wrap">
+                                        <table className="analytics-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>VIN</th>
+                                                    <th>Categories</th>
+                                                    <th>Duration (excl. From Final)</th>
+                                                    <th>Break</th>
+                                                    <th>Status</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {vinSummaryRows.map(v => {
+                                                    const isNG = v.totalMin >= 10;
+                                                    return (
+                                                        <tr key={v.vin}>
+                                                            <td className="vin-cell">{v.vin}</td>
+                                                            <td>
+                                                                {[...v.categories].map(c => (
+                                                                    <span key={c} className="badge" style={{ marginRight: '4px' }}>{c}</span>
+                                                                ))}
+                                                            </td>
+                                                            <td>
+                                                                <span className={`duration-badge${isNG ? ' duration-badge--over' : ''}`}>
+                                                                    {formatDurationMMSS(v.totalMin)}
+                                                                </span>
+                                                            </td>
+                                                            <td className="time-cell">{formatDurationMMSS(v.totalPausedMs / 60000)}</td>
+                                                            <td>
+                                                                <span className={`status-badge${isNG ? ' status-badge--ng' : ' status-badge--ok'}`}>
+                                                                    {isNG ? 'NG' : 'OK'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="time-cell">
+                                                                {new Date(v.latestDate).toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    /* ── Tab 2: All Records ── */
+                                    <div className="analytics-table-wrap">
+                                        <table className="analytics-table">
+                                            <thead>
+                                                <tr>
+                                                    <th onClick={() => handleSort('vin')} className="sortable">
+                                                        VIN {sortField === 'vin' ? (sortAsc ? '↑' : '↓') : ''}
+                                                    </th>
+                                                    <th onClick={() => handleSort('category')} className="sortable">
+                                                        Category {sortField === 'category' ? (sortAsc ? '↑' : '↓') : ''}
+                                                    </th>
+                                                    <th onClick={() => handleSort('durationMinutes')} className="sortable">
+                                                        Duration {sortField === 'durationMinutes' ? (sortAsc ? '↑' : '↓') : ''}
+                                                    </th>
+                                                    <th onClick={() => handleSort('dateCreated')} className="sortable">
+                                                        Time {sortField === 'dateCreated' ? (sortAsc ? '↑' : '↓') : ''}
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {sorted.map(r => (
+                                                    <tr key={r.id}>
+                                                        <td className="vin-cell">{r.vin}</td>
+                                                        <td><span className="badge">{r.category}</span></td>
+                                                        <td>
+                                                            <span className={`duration-badge${r.durationMinutes > 10 ? ' duration-badge--over' : ''}`}>
+                                                                {formatDurationMMSS(r.durationMinutes)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="time-cell">
+                                                            {new Date(r.dateCreated).toLocaleString()}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}
